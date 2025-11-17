@@ -46,6 +46,7 @@ El proyecto implementa el patrón **MVC**, utilizando **Spring Boot**, **Thymele
 ---
 
 ## 📁 Estructura del Proyecto (MVC)
+```bash
 src/main/java/cl/ipss/sabor_gourmet/
 │
 ├── controllers/ # Controladores web
@@ -58,6 +59,7 @@ src/main/resources/
 │
 ├── templates/ # Vistas Thymeleaf
 └── application.properties
+```
 
 ---
 

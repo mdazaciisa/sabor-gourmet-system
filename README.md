@@ -7,7 +7,7 @@ El proyecto implementa el patrón **MVC**, utilizando **Spring Boot**, **Thymele
 
 ## 🚀 Tecnologías Utilizadas
 
-- Java 17  
+- Java 21 
 - Spring Boot 3.x  
 - Spring Web  
 - Spring Data JPA  
@@ -121,7 +121,7 @@ INSERT INTO mesa (capacidad, ubicacion, disponible) VALUES
 (2, 'Patio', true),
 (4, 'VIP', true),
 (6, 'VIP', true);
-
+```
 ---
 
 ## 📄 Licencia

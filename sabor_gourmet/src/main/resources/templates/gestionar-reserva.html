@@ -1,0 +1,247 @@
+<!-- Thymeleaf: modal y JS para gestionar reservas -->
+<div th:fragment="reservasFragment">
+
+    <!-- Modal para gestionar reservas -->
+    <div class="modal fade" id="reservasModal" tabindex="-1" aria-labelledby="reservasModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reservasModalLabel">Gestionar Reservas - Comprobar Disponibilidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reservaAlert"></div>
+
+                    <!-- Opciones de clientes que reservan una mesa -->
+                    <div id="clientesTemplate" class="d-none">
+                        <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
+                            th:text="${cliente.nombre} + ' ' + ${cliente.apellido}">Cliente</option>
+                    </div>
+
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Capacidad</th>
+                                <th>Ubicación</th>
+                                <th>Disponible</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservasTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pequeño para mostrar información de reserva (Reservada por ...) -->
+    <div class="modal fade" id="infoReservaModal" tabindex="-1" aria-labelledby="infoReservaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoReservaModalLabel">Información de Reserva</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="infoReservaBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // elementos del DOM
+        var reservasTableBody = document.getElementById('reservasTableBody');
+        var reservaAlert = document.getElementById('reservaAlert');
+        var mainAlert = document.getElementById('mainAlert');
+        var clientesTemplate = document.getElementById('clientesTemplate');
+
+        // estado simple
+        var pollingInterval = null;
+        var modalAbierto = false;
+
+        // función para obtener JSON
+        function fetchJson(url, options) {
+            return fetch(url, options).then(function (res) {
+                if (!res.ok) throw res;
+                return res.json();
+            });
+        }
+
+        // cargar mesas dentro del modal para gestionar reservas
+        function cargarMesasModal() {
+            return fetchJson('/admin/api/mesas')
+                .then(function (mesas) {
+                    reservasTableBody.innerHTML = '';
+                    mesas.forEach(function (m) {
+                        var tr = document.createElement('tr');
+                        var disponible = (m.disponible === null) ? '—' : (m.disponible ? '<span class="text-success">Sí</span>' : '<span class="text-danger">No</span>');
+                        tr.innerHTML = '<td>' + m.id + '</td>' +
+                            '<td>' + m.capacidad + '</td>' +
+                            '<td>' + (m.ubicacion || '') + '</td>' +
+                            '<td>' + disponible + '</td>' +
+                            '<td></td>';
+
+                        var tdAcc = tr.querySelector('td:last-child');
+                        if (m.disponible) {
+                            var boton = document.createElement('button');
+                            boton.className = 'btn btn-sm btn-primary';
+                            boton.textContent = 'Reservar';
+                            boton.onclick = function () { mostrarSelectorCliente(m.id, tdAcc); };
+                            tdAcc.appendChild(boton);
+                        } else {
+                            var span = document.createElement('span');
+                            span.className = 'badge bg-danger me-2';
+                            span.textContent = 'Ocupada';
+                            tdAcc.appendChild(span);
+
+                            var btnLiberar = document.createElement('button');
+                            btnLiberar.className = 'btn btn-sm btn-outline-success';
+                            btnLiberar.textContent = 'Liberar';
+                            btnLiberar.onclick = function () { liberarMesa(m.id); };
+                            tdAcc.appendChild(btnLiberar);
+                        }
+
+                        reservasTableBody.appendChild(tr);
+                    });
+                })
+                .catch(function () {
+                    reservaAlert.innerHTML = '<div class="alert alert-danger">No se pudo cargar mesas.</div>';
+                });
+        }
+
+        // pausa el polling
+        function pausarPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        // reanuda el polling si el modal está abierto
+        function reanudarPolling() {
+            if (modalAbierto && !pollingInterval) {
+                pollingInterval = setInterval(cargarMesasModal, 5000);
+            }
+        }
+
+        // muestra selector de cliente (dentro del modal) y pausa el polling para no perder la selección
+        function mostrarSelectorCliente(mesaId, td) {
+            pausarPolling();
+            td.innerHTML = '';
+            var sel = document.createElement('select');
+            sel.className = 'form-select form-select-sm d-inline-block me-2';
+            sel.style.width = '220px';
+            sel.innerHTML = clientesTemplate.innerHTML;
+
+            var btnConfirm = document.createElement('button');
+            btnConfirm.className = 'btn btn-sm btn-primary me-1';
+            btnConfirm.textContent = 'Confirmar';
+            btnConfirm.onclick = function () {
+                reservarMesa(mesaId, sel.value).then(function () {
+                    reanudarPolling();
+                });
+            };
+
+            var btnCancel = document.createElement('button');
+            btnCancel.className = 'btn btn-sm btn-secondary';
+            btnCancel.textContent = 'Cancelar';
+            btnCancel.onclick = function () {
+                cargarMesasModal();
+                reanudarPolling();
+            };
+
+            td.appendChild(sel);
+            td.appendChild(btnConfirm);
+            td.appendChild(btnCancel);
+        }
+
+        // reservar mesa llamando al API
+        function reservarMesa(id, clienteId) {
+            return fetch('/admin/api/mesas/' + id + '/reservar?clienteId=' + clienteId, { method: 'POST' })
+                .then(function (res) {
+                    if (res.status === 409) {
+                        reservaAlert.innerHTML = '<div class="alert alert-warning">La mesa ya está ocupada.</div>';
+                        return cargarMesasModal();
+                    }
+                    if (res.status === 400) {
+                        return res.text().then(function (t) { reservaAlert.innerHTML = '<div class="alert alert-warning">' + (t || 'Solicitud inválida') + '</div>'; }).then(cargarMesasModal);
+                    }
+                    if (!res.ok) throw res;
+                    reservaAlert.innerHTML = '<div class="alert alert-success">Mesa reservada correctamente.</div>';
+                    return cargarMesasModal().then(loadMainMesas);
+                })
+                .catch(function () {
+                    reservaAlert.innerHTML = '<div class="alert alert-danger">No se pudo reservar la mesa.</div>';
+                });
+        }
+
+        // liberar mesa
+        function liberarMesa(id) {
+            return fetch('/admin/api/mesas/' + id + '/liberar', { method: 'POST' })
+                .then(function (res) {
+                    if (!res.ok) throw res;
+                    reservaAlert.innerHTML = '<div class="alert alert-success">Mesa liberada.</div>';
+                    return cargarMesasModal().then(loadMainMesas);
+                })
+                .catch(function () {
+                    reservaAlert.innerHTML = '<div class="alert alert-danger">No se pudo liberar la mesa.</div>';
+                });
+        }
+
+        // carga la tabla principal sin recargar la página
+        function loadMainMesas() {
+            return fetchJson('/admin/api/mesas')
+                .then(function (mesas) {
+                    var tbody = document.getElementById('mesasTableBody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '';
+                    mesas.forEach(function (m) {
+                        var tr = document.createElement('tr');
+                        var disp = (m.disponible === null) ? '—' : (m.disponible ? 'Sí' : 'No');
+                        tr.innerHTML = '<td>' + m.id + '</td>' + '<td>' + m.capacidad + '</td>' + '<td>' + (m.ubicacion || '') + '</td>' + '<td>' + disp + '</td>' + '<td></td>';
+                        var td = tr.querySelector('td:last-child');
+                        var aVer = document.createElement('a'); aVer.className = 'btn btn-sm btn-warning'; aVer.href = '/mesas/' + m.id; aVer.textContent = 'Ver';
+                        var aDel = document.createElement('a'); aDel.className = 'btn btn-sm btn-danger ms-1'; aDel.href = '/mesas/eliminar/' + m.id; aDel.textContent = 'Eliminar'; aDel.onclick = function () { return confirm('¿Estás seguro de eliminar esta mesa?'); };
+                        var btnVer = document.createElement('button'); btnVer.className = 'btn btn-sm btn-info ms-1'; btnVer.textContent = 'Ver Reservas'; btnVer.onclick = function () { verReservaModalSmall(m.id); };
+                        td.appendChild(aVer); td.appendChild(aDel); td.appendChild(btnVer);
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(function (e) { console.error(e); });
+        }
+
+        // mostrar info de reserva en modal pequeño
+        function verReservaModalSmall(id) {
+            fetch('/admin/api/mesas/' + id + '/reserva')
+                .then(function (res) { if (!res.ok) throw res; return res.json(); })
+                .then(function (data) {
+                    var body = document.getElementById('infoReservaBody');
+                    if (!data.found) body.innerHTML = '<p class="mb-0">Mesa no encontrada</p>';
+                    else if (data.disponible) body.innerHTML = '<p class="mb-0">Mesa disponible.</p>';
+                    else body.innerHTML = '<p class="mb-0"><strong>Reservada por:</strong> ' + (data.reservadoPorNombre || 'Desconocido') + '</p>';
+                    var modal = new bootstrap.Modal(document.getElementById('infoReservaModal'));
+                    modal.show();
+                })
+                .catch(function () { if (mainAlert) mainAlert.innerHTML = '<div class="alert alert-danger">No se pudo obtener la reserva.</div>'; });
+        }
+
+        // eventos del modal
+        var reservasModal = document.getElementById('reservasModal');
+        if (reservasModal) {
+            reservasModal.addEventListener('show.bs.modal', function () { modalAbierto = true; cargarMesasModal(); pollingInterval = setInterval(cargarMesasModal, 5000); });
+            reservasModal.addEventListener('hidden.bs.modal', function () { modalAbierto = false; pausarPolling(); reservaAlert.innerHTML = ''; });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () { loadMainMesas(); });
+    </script>
+
+</div>

@@ -89,9 +89,13 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 6. Accede a:
     http://localhost:8080/admin 
 
-## 🗄️ Poblar la Base de Datos
+---
 
+## 🗄️ Poblar la Base de Datos
+```md
 Ejecutar después de que Hibernate genere las tablas: 
+
+```sql
 TRUNCATE TABLE cliente RESTART IDENTITY CASCADE;
 TRUNCATE TABLE mesa RESTART IDENTITY CASCADE;
 

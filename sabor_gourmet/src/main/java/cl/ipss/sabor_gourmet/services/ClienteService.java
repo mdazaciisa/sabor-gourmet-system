@@ -7,11 +7,15 @@ import org.springframework.stereotype.Service;
 
 import cl.ipss.sabor_gourmet.models.Cliente;
 import cl.ipss.sabor_gourmet.repositories.ClienteRepository;
+import cl.ipss.sabor_gourmet.repositories.ReservaRepository;
 
 @Service
 public class ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private ReservaRepository reservaRepository;
 
     public List<Cliente> listarClientes() {
         return clienteRepository.findAll();
@@ -30,6 +34,11 @@ public class ClienteService {
     }
 
     public void eliminarCliente(Long id) {
+        // Evitar eliminar un cliente que está referenciado por una reserva
+        if (reservaRepository.existsByClienteId(id)) {
+            throw new IllegalStateException("No se puede eliminar el cliente porque tiene reservas asociadas");
+        }
+
         clienteRepository.deleteById(id);
     }
 

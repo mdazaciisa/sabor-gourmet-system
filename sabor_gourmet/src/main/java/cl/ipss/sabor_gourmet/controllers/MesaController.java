@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import cl.ipss.sabor_gourmet.models.Mesa;
@@ -48,9 +50,15 @@ public class MesaController {
     }
 
     @GetMapping("/eliminar/{id}")
-    public String eliminarMesa(@PathVariable Long id) {
-        mesaService.eliminarMesa(id);
-        return "redirect:/mesas";
+    public String eliminarMesa(@PathVariable Long id, RedirectAttributes redirectAttrs, HttpServletRequest request) {
+        try {
+            mesaService.eliminarMesa(id);
+            redirectAttrs.addFlashAttribute("success", "Mesa eliminada correctamente.");
+        } catch (IllegalStateException ex) {
+            redirectAttrs.addFlashAttribute("error", ex.getMessage());
+        }
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null ? referer : "/mesas");
     }
 
 }

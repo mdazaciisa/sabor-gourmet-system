@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SaborGourmetApplication<sabor_gourmet>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "cl.ipss.sabor_gourmet.SaborGourmetApplication",
+            "projectName": "sabor_gourmet",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

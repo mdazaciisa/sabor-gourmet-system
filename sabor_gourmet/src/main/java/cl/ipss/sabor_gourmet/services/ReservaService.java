@@ -44,10 +44,9 @@ public class ReservaService {
         r.setFechaHora(LocalDateTime.now());
         r.setEstado(ESTADO_ACTIVE);
 
-        // persistir reserva
         Reserva saved = reservaRepository.save(r);
 
-        // actualizar estado de la mesa (mantener reservadoPorId/Nombre para compatibilidad)
+        // actualizar estado de la mesa
         m.setDisponible(false);
         if (c != null) {
             m.setReservadoPorId(c.getId());

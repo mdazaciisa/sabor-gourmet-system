@@ -7,9 +7,6 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Mesa {
-    /*@OneToMany(mappedBy = "mesa", cascade = CascadeType.ALL)
-      private List<Reserva> reservas;
-     */
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +15,6 @@ public class Mesa {
     private int capacidad;
     private String ubicacion;
     private Boolean disponible;
-    // Campos sencillos para indicar quién reservó (implementación simple para aprendizaje)
     private Long reservadoPorId;
     private String reservadoPorNombre;
 

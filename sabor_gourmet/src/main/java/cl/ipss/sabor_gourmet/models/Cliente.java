@@ -7,9 +7,6 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Cliente {
-    /* @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
-    private List<Reserva> reservas;
-     */
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

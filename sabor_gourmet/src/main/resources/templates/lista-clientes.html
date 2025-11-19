@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Clientes</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
 </head>
 
 <body class="bg-light">
@@ -19,6 +18,40 @@
         <h1 class="mb-4 text-center">Listado de Clientes</h1>
 
         <a class="btn btn-primary mb-3" th:href="@{/clientes/registrar}">Agregar Cliente</a>
+
+        <!-- Modal para mensajes flash -->
+        <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="messageModalLabel">Mensaje</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body" id="messageModalBody"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+        var errorMsg = /*[[${error}]]*/ null;
+        var successMsg = /*[[${success}]]*/ null;
+        function showMessageModal(title, message) {
+            var label = document.getElementById('messageModalLabel');
+            var body = document.getElementById('messageModalBody');
+            if (label) label.textContent = title || 'Mensaje';
+            if (body) body.textContent = message || '';
+            var modalEl = document.getElementById('messageModal');
+            if (modalEl) new bootstrap.Modal(modalEl).show();
+        }
+        if (errorMsg || successMsg) {
+            var title = errorMsg ? 'Error' : 'Éxito';
+            var body = errorMsg || successMsg;
+            document.addEventListener('DOMContentLoaded', function () { showMessageModal(title, body); });
+        }
+        </script>
 
         <table class="table table-striped">
             <thead class="table-dark">
@@ -44,8 +77,6 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

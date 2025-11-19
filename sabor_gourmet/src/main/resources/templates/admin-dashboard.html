@@ -5,8 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Panel Administrador</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
 </head>
 
 <body class="bg-light">
@@ -47,11 +46,8 @@
 
                     <td>
                         <a class="btn btn-sm btn-warning" th:href="@{|/mesas/${mesa.id}|}">Ver</a>
-                        <a class="btn btn-sm btn-danger" th:href="@{|/mesas/eliminar/${mesa.id}|}"
-                            onclick="return confirm('¿Estás seguro de eliminar esta mesa?')">
-                            Eliminar
-                        </a>
-                        <!-- Ver Reserva: muestra la info de reserva en la página principal (no abre modal) -->
+                        <a class="btn btn-sm btn-danger" th:href="@{|/mesas/eliminar/${mesa.id}|}" onclick="return confirm('¿Estás seguro de eliminar esta mesa?')">Eliminar</a>
+                        <!-- Ver Reserva: muestra la info de reserva en la página principal-->
                         <button class="btn btn-sm btn-info" th:attr="onclick=|verReservaInline(${mesa.id})|">Ver Reservas</button>
                     </td>
                 </tr>
@@ -82,10 +78,7 @@
 
                     <td>
                         <a class="btn btn-sm btn-warning" th:href="@{|/clientes/${cliente.id}|}">Ver</a>
-                        <a class="btn btn-sm btn-danger" th:href="@{|/clientes/eliminar/${cliente.id}|}"
-                            onclick="return confirm('¿Estás seguro de eliminar este cliente?')">
-                            Eliminar
-                        </a>
+                        <a class="btn btn-sm btn-danger" th:href="@{|/clientes/eliminar/${cliente.id}|}" onclick="return confirm('¿Estás seguro de eliminar este cliente?')">Eliminar</a>
                     </td>
                 </tr>
             </tbody>
@@ -94,9 +87,45 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+    <!-- Modal genérico para mostrar mensajes (errores/éxitos) -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalLabel">Mensaje</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showMessageModal(title, message) {
+            var label = document.getElementById('messageModalLabel');
+            var body = document.getElementById('messageModalBody');
+            label.textContent = title || 'Mensaje';
+            body.textContent = message || '';
+            var modal = new bootstrap.Modal(document.getElementById('messageModal'));
+            modal.show();
+        }
+    </script>
+
+    <!-- Abrir modal si hay flash messages -->
+    <script th:inline="javascript">
+      var errorMsg = /*[[${error}]]*/ null;
+      var successMsg = /*[[${success}]]*/ null;
+      if (errorMsg || successMsg) {
+        var title = errorMsg ? 'Error' : 'Éxito';
+        var body = errorMsg || successMsg;
+        document.addEventListener('DOMContentLoaded', function () { showMessageModal(title, body); });
+      }
+    </script>
 
     <!-- Insertar fragmento modularizado para gestionar reservas -->
     <div th:insert="gestionar-reserva :: reservasFragment"></div>

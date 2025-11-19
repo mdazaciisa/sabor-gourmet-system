@@ -24,7 +24,7 @@ public class Reserva {
     private Cliente cliente;
 
     private LocalDateTime fechaHora;
-    private String estado; // e.g. ACTIVE, CANCELLED
+    private String estado; // ACTIVE, CANCELLED
 
     public Reserva() {
     }

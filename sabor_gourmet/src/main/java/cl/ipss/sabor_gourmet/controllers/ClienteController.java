@@ -10,6 +10,8 @@ import cl.ipss.sabor_gourmet.services.ClienteService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 @Controller
@@ -49,9 +51,15 @@ public class ClienteController {
     }
 
     @GetMapping("/eliminar/{id}")
-    public String eliminarCliente(@PathVariable Long id) {
-        clienteService.eliminarCliente(id);
-        return "redirect:/clientes";
+    public String eliminarCliente(@PathVariable Long id, RedirectAttributes redirectAttrs, HttpServletRequest request) {
+        try {
+            clienteService.eliminarCliente(id);
+            redirectAttrs.addFlashAttribute("success", "Cliente eliminado correctamente.");
+        } catch (IllegalStateException ex) {
+            redirectAttrs.addFlashAttribute("error", ex.getMessage());
+        }
+        String referer = request.getHeader("Referer");
+        return "redirect:" + (referer != null ? referer : "/clientes");
     }
     
 
